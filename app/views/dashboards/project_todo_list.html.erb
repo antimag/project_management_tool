@@ -1,0 +1,27 @@
+<div class="page-header">
+  <h1>Project's Todos</h1>
+</div>
+<table class="table table-striped">
+  <thead>
+    <tr>
+      <th>Status</th>
+      <%@headers.each do|theader|%>
+        <th><%=theader%></th>
+      <%end%>
+    </tr>
+  </thead>
+  <tbody>
+    <%@status.all.each do|status|%>
+      <tr>
+          <td><%=status.name.titleize%></td>
+        <%@projects.each do|project|%>
+        <td>
+          <%get_project_todo_by_status(project.id,status.id).each do|data|%>
+            <div><%=data.title%></div>
+          <%end%>
+            </td>
+        <%end%>
+      </tr>
+    <%end%>
+  </tbody>
+</table>

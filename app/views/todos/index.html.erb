@@ -1,0 +1,82 @@
+<%- model_class = Todo -%>
+<div class="page-header">
+  <h1><%=t '.title', :default => model_class.model_name.human.pluralize.titleize %></h1>
+  <% if can? :manage, Todo %>
+    <%= link_to t('.new', :default => t("helpers.links.new")),
+                new_todo_path,
+                :class => 'btn btn-primary' %>
+  <% end %>
+</div>
+<table class="table table-striped">
+  <thead>
+    <tr>
+      <th><%= model_class.human_attribute_name(:id) %></th>
+      <th><%= model_class.human_attribute_name(:title) %></th>
+      <th><%= model_class.human_attribute_name(:description) %></th>
+      <th><%= model_class.human_attribute_name(:due_date) %></th>
+      <th><%= model_class.human_attribute_name(:todo_status_id) %></th>
+      <th>Project</th>
+      <th>Developer</th>
+      <th>Mark As</th>
+      <%if can? :manage, Todo%>
+        <th>Assign To</th>
+        <th><%=t '.actions', :default => t("helpers.actions") %></th>
+      <%end%>
+    </tr>
+  </thead>
+  <tbody>
+    <% @todos.each do |todo| %>
+      <tr>
+        <td><%= todo.id %></td>
+        <td><%= link_to todo.title, todo_path(todo) %></td>
+        <td><%= todo.description %></td>
+        <td><%= todo.due_date.strftime("%b %d %Y") %></td>
+        <td id="todo<%=todo.id%>_todo_status_id"><%= todo.todo_status.name.titleize.capitalize %></td>
+        <td><%= todo.project.name.titleize %></td>
+        <td id="todo<%=todo.id%>_user_id"><%= todo.user.name.titleize %></td>
+        <td>
+          <%=select_tag :todo_status_id, options_for_select(TodoStatus.all.collect { | todo_status | [todo_status.name.capitalize.titleize, todo_status.id] }, todo.todo_status_id), prompt: "--select status--", "data-todo-id": todo.id, onchange: "update_status(this)"%>
+        </td>
+        <%if can? :manage, todo%>
+          <td>
+            <%=select_tag :user_id, options_for_select(todo.project.users.collect { | user | [user.name.titleize, user.id] }, todo.user_id), prompt: "--select develpeor--", "data-todo-id": todo.id, onchange: "update_status(this)"%>
+          </td>
+          <td>              
+            <%= link_to t('.edit', :default => t("helpers.links.edit")),
+                        edit_todo_path(todo), :class => 'btn btn-default btn-xs' %>
+            <%= link_to t('.destroy', :default => t("helpers.links.destroy")),
+                        todo_path(todo),
+                        :method => :delete,
+                        :data => { :confirm => t('.confirm', :default => t("helpers.links.confirm", :default => 'Are you sure?')) },
+                        :class => 'btn btn-xs btn-danger' %>
+          </td>
+        <%end%>
+      </tr>
+    <% end %>
+  </tbody>
+</table>
+<script type="text/javascript">
+  function update_status(element){
+    todo_id = element.getAttribute("data-todo-id")
+    data_param = element.getAttribute("id")
+    data = {}
+    data[data_param] = element.value
+
+    data_td = $("#todo"+todo_id+"_"+data_param)
+    if (todo_id != ""){
+      $.ajax({
+        url: 'todos/'+todo_id+'/update_status/',
+        type: 'patch',
+        dataType: 'json',
+        data: {todo: data},
+        success: function (response) {
+          data_td.text(response.data)
+          alert(response.message)
+        },
+        error: function() {
+          alert("Something went wrong!")
+        }
+      });
+    }
+  }
+</script>
